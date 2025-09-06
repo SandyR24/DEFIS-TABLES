@@ -1,10 +1,10 @@
-   <!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="Cache-Control" content="no-store" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SACADO - Défi Tables (Dys) v8</title>
+    <title>SACADO - Défi Tables (Dys) v9</title>
 
     <!-- React + ReactDOM (prod UMD) -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -19,7 +19,7 @@
     <style>
       body { margin: 0; }
 
-      /* Polices locales (OpenDyslexic .otf déjà dans ton repo) */
+      /* Polices locales */
       @font-face {
         font-family: 'OpenDyslexicLocal';
         src: url('OpenDyslexic3-Regular.woff2') format('woff2'),
@@ -28,8 +28,6 @@
              url('OpenDyslexicMono-Regular.otf') format('opentype');
         font-display: swap;
       }
-      @font-face { font-family: 'EasyReadingLocal'; src: url('EasyReading-Regular.woff2') format('woff2'); font-display: swap; }
-      @font-face { font-family: 'DyslexieLocal';   src: url('Dyslexie-Regular.woff2') format('woff2');   font-display: swap; }
 
       .version-badge {
         position: fixed; bottom: 8px; left: 8px; z-index: 9999;
@@ -47,24 +45,13 @@
       .dark-mode ::placeholder { color: #94a3b8 !important; opacity: 1; }
       .dark-mode table thead th { color: #f8fafc !important; }
       .dark-mode .muted { color: #d1d5db !important; }
-
-      /* Pills lisibles en noir */
-      .dark-mode .pill {
-        background: #ffffff !important;
-        border-color: #e5e7eb !important;
-        color: #111827 !important; /* texte noir */
-      }
-      /* Checkbox lisible + accent violet */
-      .dark-mode input[type="checkbox"] {
-        background: #000 !important;
-        border-color: #94a3b8 !important;
-        accent-color: #8374a7;
-      }
+      .dark-mode .pill { background: #ffffff !important; border-color: #e5e7eb !important; color: #111827 !important; }
+      .dark-mode input[type="checkbox"] { background: #000 !important; border-color: #94a3b8 !important; accent-color: #8374a7; }
     </style>
   </head>
   <body>
     <div id="root"></div>
-    <div class="version-badge">DEFIS-TABLES v8</div>
+    <div class="version-badge">DEFIS-TABLES v9</div>
 
     <script type="text/babel" data-presets="env,react">
       const { useState, useEffect, useMemo, useRef } = React;
@@ -79,7 +66,6 @@
         </div>
       );
 
-      /* pill class + texte noir quand inactive */
       const TogglePill = ({ active, children, onClick }) => (
         <button
           onClick={onClick}
@@ -100,14 +86,14 @@
         <div className="mb-4 rounded-3xl overflow-hidden shadow-sm border card">
           <div className="px-4 py-3 text-white flex items-center justify-between" style={{backgroundColor:BRAND}}>
             <div className="flex items-center gap-3">
-              <img src="sacadoLogo.png?v=8" alt="SACADO" className="h-8 w-8 rounded-lg bg-white/90 p-1"/>
+              <img src="sacadoLogo.png?v=9" alt="SACADO" className="h-8 w-8 rounded-lg bg-white/90 p-1"/>
               <div>
                 <div className="font-black leading-tight">SACADO académie</div>
                 <div className="text-xs opacity-90">Défi Tables</div>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <img src="dogbot.png?v=8" alt="dogbot" className="h-8 w-8 rounded-full bg-white/90 p-0.5 object-cover"/>
+              <img src="dogbot.png?v=9" alt="dogbot" className="h-8 w-8 rounded-full bg-white/90 p-0.5 object-cover"/>
             </div>
           </div>
         </div>
@@ -172,8 +158,6 @@
         const fontFamily =
           dysFont==="Verdana" ? "Verdana, Geneva, Tahoma, sans-serif" :
           dysFont==="OpenDyslexic" ? "OpenDyslexicLocal, Arial, sans-serif" :
-          dysFont==="EasyReading" ? "EasyReadingLocal, Arial, sans-serif" :
-          dysFont==="Dyslexie" ? "DyslexieLocal, Arial, sans-serif" :
           "Arial, Helvetica, sans-serif";
 
         return (
@@ -222,7 +206,9 @@
                       <div className="mt-2 space-y-2">
                         <div className="flex gap-2 flex-wrap">
                           <select value={dysFont} onChange={e=>setDysFont(e.target.value)} className="border rounded p-1">
-                            <option>Arial</option><option>Verdana</option><option>OpenDyslexic</option><option>EasyReading</option><option>Dyslexie</option>
+                            <option>Arial</option>
+                            <option>Verdana</option>
+                            <option>OpenDyslexic</option>
                           </select>
                           <select value={dysSize} onChange={e=>setDysSize(parseInt(e.target.value))} className="border rounded p-1">
                             {[16,18,20,22,24].map(s=><option key={s} value={s}>{s}px</option>)}
@@ -234,10 +220,10 @@
                     )}
                   </div>
 
-                  {/* Audio */}
-                  <div className="p-4 rounded-2xl border flex items-center justify-between card" style={cardStyle}>
-                    <label>Audio (TTS) – lire les énoncés</label>
+                  {/* Audio (coche à gauche) */}
+                  <div className="p-4 rounded-2xl border card flex items-center gap-2" style={cardStyle}>
                     <input type="checkbox" checked={audio} onChange={e=>setAudio(e.target.checked)}/>
+                    <label>Audio (TTS) – lire les énoncés</label>
                   </div>
 
                   <button onClick={start} className="px-5 py-3 rounded-2xl text-white font-semibold shadow" style={{backgroundColor:BRAND}}>
