@@ -1,69 +1,68 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SACADO - Défi Tables (v2)</title>
+    <title>SACADO - Défi Tables (Dys)</title>
 
-    <!-- React + ReactDOM en premier -->
+    <!-- React + ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
 
-    <!-- Babel (transpile JSX) -->
+    <!-- Babel pour JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Tailwind (facultatif) -->
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <style>body{margin:0}</style>
+    <style>
+      body { margin:0; }
+      @font-face { font-family: 'OpenDyslexicLocal'; src: url('OpenDyslexic3-Regular.woff2') format('woff2'); }
+      @font-face { font-family: 'EasyReadingLocal'; src: url('EasyReading-Regular.woff2') format('woff2'); }
+      @font-face { font-family: 'DyslexieLocal'; src: url('Dyslexie-Regular.woff2') format('woff2'); }
+    </style>
   </head>
   <body>
     <div id="root"></div>
 
-    <!-- Marque visible pour vérifier la version -->
-    <div style="position:fixed;bottom:8px;left:8px;background:#8374a7;color:#fff;padding:4px 8px;border-radius:8px;font:12px/1 sans-serif;z-index:9999">
-      DEFIS-TABLES v2
-    </div>
-
-    <!-- Ton app React en JSX => Babel doit avoir les PRESETS -->
     <script type="text/babel" data-presets="env,react">
       const { useState, useEffect, useMemo, useRef } = React;
       const BRAND = "#8374a7";
-      const TABLE_MIN = 2, TABLE_MAX = 10;
+      const TABLE_MIN=2, TABLE_MAX=10;
 
       const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 
-      const ProgressBar = ({ value }) => (
+      const ProgressBar=({value})=>(
         <div className="w-full h-3 rounded-full bg-slate-200 overflow-hidden">
           <div className="h-full transition-all" style={{width:`${clamp(value,0,100)}%`,backgroundColor:BRAND}}/>
         </div>
       );
 
-      const TogglePill = ({ active, children, onClick }) => (
+      const TogglePill=({active,children,onClick})=>(
         <button onClick={onClick}
           className={"px-3 py-1 rounded-full border text-sm transition select-none "+
-            (active ? "text-white" : "bg-white border-slate-300 hover:shadow")}
+          (active?"text-white":"bg-white border-slate-300 hover:shadow")}
           style={{
-            backgroundColor: active ? BRAND : undefined,
-            borderColor: active ? BRAND : undefined,
-            fontWeight: active ? 700 : 500,
-            color: active ? "#fff" : undefined,
+            backgroundColor:active?BRAND:undefined,
+            borderColor:active?BRAND:undefined,
+            fontWeight:active?700:500,
+            color:active?"#fff":undefined,
           }}>{children}</button>
       );
 
-      const TopBar = () => (
+      const TopBar=()=>(
         <div className="mb-4 rounded-3xl overflow-hidden shadow-sm border">
           <div className="px-4 py-3 text-white flex items-center justify-between" style={{backgroundColor:BRAND}}>
             <div className="flex items-center gap-3">
-              <img src="sacadoLogo.png?v=2" alt="SACADO académie" className="h-8 w-8 rounded-lg bg-white/90 p-1"/>
+              <img src="sacadoLogo.png" alt="SACADO" className="h-8 w-8 rounded-lg bg-white/90 p-1"/>
               <div>
                 <div className="font-black leading-tight">SACADO académie</div>
-                <div className="text-xs opacity-90">Jeux d'automatismes — Défi Tables</div>
+                <div className="text-xs opacity-90">Défi Tables</div>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <span className="hidden sm:inline text-sm">dogbot</span>
-              <img src="dogbot.png?v=2" alt="dogbot" className="h-8 w-8 rounded-full bg-white/90 p-0.5 object-cover"/>
+              <img src="dogbot.png" alt="dogbot" className="h-8 w-8 rounded-full bg-white/90 p-0.5 object-cover"/>
             </div>
           </div>
         </div>
@@ -80,9 +79,23 @@
         const [input,setInput]=useState("");
         const [tick,setTick]=useState(0);
         const [answers,setAnswers]=useState([]);
-        const inputRef = useRef(null);
+        const inputRef=useRef(null);
 
-        // timer
+        // Options dys
+        const [dysMode,setDysMode]=useState(false);
+        const [dysFont,setDysFont]=useState("Arial");
+        const [dysSize,setDysSize]=useState(16);
+        const [dysYellow,setDysYellow]=useState(false);
+        const [dysBlack,setDysBlack]=useState(false);
+        const [audio,setAudio]=useState(false);
+
+        useEffect(()=>{ document.body.style.fontSize=dysMode?`${dysSize}px`:"16px"; },[dysMode,dysSize]);
+
+        const surface = dysBlack?"#111":(dysYellow?"#fff2a8":"#fff");
+        const rootBg = dysBlack?"#000":(dysYellow?"#fff7cc":"#f8fafc");
+        const rootText = dysBlack?"#f8fafc":undefined;
+
+        // Timer
         useEffect(()=>{
           if(!started||finished) return;
           const id=setInterval(()=>setTick(t=>t+1),1000);
@@ -91,73 +104,97 @@
 
         useEffect(()=>{
           if(!started||finished) return;
-          if(timeLimit!=null && tick>=timeLimit){ handleSubmit(true); }
+          if(timeLimit!=null && tick>=timeLimit) handleSubmit(true);
         },[tick]);
 
         const start=()=>{
           const list=[];
           for(let i=0;i<questionCount;i++){
-            const a = selectedTables[Math.floor(Math.random()*selectedTables.length)];
-            const b = Math.floor(Math.random()*9)+2;
+            const a=selectedTables[Math.floor(Math.random()*selectedTables.length)];
+            const b=Math.floor(Math.random()*9)+2;
             list.push({a,b,product:a*b});
           }
           setQuestions(list);
           setIndex(0); setAnswers([]); setInput(""); setTick(0);
           setStarted(true); setFinished(false);
-          setTimeout(()=>{ if (inputRef.current) inputRef.current.focus(); },0);
+          setTimeout(()=>inputRef.current?.focus(),0);
+          if(audio) speak(`Prépare-toi. Première question.`);
         };
 
-        const current = questions[index];
-        const progressPct = useMemo(()=>{
+        const speak=(txt)=>{
+          try{
+            if(!audio) return;
+            const u=new SpeechSynthesisUtterance(txt);
+            u.lang="fr-FR";
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(u);
+          }catch(e){}
+        };
+
+        useEffect(()=>{
+          if(started && !finished && questions[index]) speak(`${questions[index].a} multiplié par ${questions[index].b}`);
+        },[index,started,finished]);
+
+        const current=questions[index];
+        const progressPct=useMemo(()=>{
           if(!started) return 0;
           if(timeLimit==null) return 100;
-          const total = timeLimit, remaining = clamp(total - tick, 0, total);
+          const total=timeLimit, remaining=clamp(total-tick,0,total);
           return (remaining/total)*100;
         },[started,tick,timeLimit]);
 
         const handleSubmit=(timeout=false)=>{
           if(!current) return;
-          const userNum = Number(input);
-          const userProvided = input !== "";
-          const correct = !timeout && userProvided && userNum === current.product;
-          const record = { a:current.a, b:current.b, product:current.product,
-            user: timeout ? null : (userProvided ? userNum : null),
-            correct, time: timeLimit!=null ? Math.min(tick,timeLimit) : tick, timeout };
+          const userNum=Number(input);
+          const userProvided=input!=="";
+          const correct=!timeout && userProvided && userNum===current.product;
+          const record={a:current.a,b:current.b,product:current.product,
+                        user:timeout?null:(userProvided?userNum:null),
+                        correct,time:timeLimit!=null?Math.min(tick,timeLimit):tick,timeout};
           setAnswers(prev=>[...prev,record]);
-
+          if(!correct){
+            if(timeout) speak(`Hors délai. La bonne réponse est ${current.product}`);
+            else if(!userProvided) speak(`Pas de réponse. La bonne réponse est ${current.product}`);
+            else speak(`Incorrect. La bonne réponse est ${current.product}`);
+          }
           if(index+1>=questions.length){ setFinished(true); setStarted(false); }
           else { setIndex(i=>i+1); setTick(0); setInput(""); }
         };
 
-        const score = useMemo(()=>answers.filter(a=>a.correct).length,[answers]);
+        const score=useMemo(()=>answers.filter(a=>a.correct).length,[answers]);
+
+        // Classes police
+        const fontFamily = dysFont==="Verdana"?"Verdana, Geneva, Tahoma, sans-serif":
+                           dysFont==="OpenDyslexic"?"OpenDyslexicLocal, Arial, sans-serif":
+                           dysFont==="EasyReading"?"EasyReadingLocal, Arial, sans-serif":
+                           dysFont==="Dyslexie"?"DyslexieLocal, Arial, sans-serif":"Arial, sans-serif";
 
         return (
-          <div className="min-h-screen p-6 bg-slate-50">
+          <div className="min-h-screen p-6" style={{backgroundColor:rootBg,color:rootText,fontFamily}}>
             <div className="max-w-4xl mx-auto space-y-6">
               <TopBar/>
-
-              {/* Réglages */}
               {!started && !finished && (
                 <div className="space-y-4">
-                  <div className="p-4 rounded-2xl border bg-white">
-                    <label className="block text-sm text-slate-600 mb-2">Tables</label>
+                  {/* Options jeu */}
+                  <div className="p-4 rounded-2xl border" style={{backgroundColor:surface}}>
+                    <label className="block text-sm mb-2">Tables</label>
                     <div className="flex flex-wrap gap-2">
-                      {Array.from({length:9},(_,i)=>i+2).map(n=>(
+                      {[2,3,4,5,6,7,8,9,10].map(n=>(
                         <TogglePill key={n} active={selectedTables.includes(n)}
                           onClick={()=>setSelectedTables(prev=>prev.includes(n)?prev.filter(x=>x!==n):[...prev,n])}>{n}</TogglePill>
                       ))}
                     </div>
                   </div>
-                  <div className="p-4 rounded-2xl border bg-white">
-                    <label className="block text-sm text-slate-600 mb-2">Nombre de questions</label>
+                  <div className="p-4 rounded-2xl border" style={{backgroundColor:surface}}>
+                    <label className="block text-sm mb-2">Nombre de questions</label>
                     <div className="flex gap-2 flex-wrap">
                       {[5,10,15,20].map(n=>(
                         <TogglePill key={n} active={questionCount===n} onClick={()=>setQuestionCount(n)}>{n}</TogglePill>
                       ))}
                     </div>
                   </div>
-                  <div className="p-4 rounded-2xl border bg-white">
-                    <label className="block text-sm text-slate-600 mb-2">Temps par question</label>
+                  <div className="p-4 rounded-2xl border" style={{backgroundColor:surface}}>
+                    <label className="block text-sm mb-2">Temps par question</label>
                     <div className="flex gap-2 flex-wrap">
                       {[3,5,10].map(s=>(
                         <TogglePill key={s} active={timeLimit===s} onClick={()=>setTimeLimit(s)}>{s}s</TogglePill>
@@ -165,9 +202,27 @@
                       <TogglePill active={timeLimit==null} onClick={()=>setTimeLimit(null)}>Pas de limite</TogglePill>
                     </div>
                   </div>
-                  <button onClick={start}
-                    className="px-5 py-3 rounded-2xl text-white font-semibold shadow"
-                    style={{backgroundColor:BRAND}}>Lancer le défi</button>
+                  {/* Options dys */}
+                  <div className="p-4 rounded-2xl border" style={{backgroundColor:surface}}>
+                    <label className="flex items-center gap-2"><input type="checkbox" checked={dysMode} onChange={e=>setDysMode(e.target.checked)}/> Mode dys</label>
+                    {dysMode && (
+                      <div className="mt-2 space-y-2">
+                        <select value={dysFont} onChange={e=>setDysFont(e.target.value)} className="border rounded p-1">
+                          <option>Arial</option><option>Verdana</option><option>OpenDyslexic</option><option>EasyReading</option><option>Dyslexie</option>
+                        </select>
+                        <select value={dysSize} onChange={e=>setDysSize(parseInt(e.target.value))} className="border rounded p-1">
+                          {[16,18,20,22,24].map(s=><option key={s} value={s}>{s}px</option>)}
+                        </select>
+                        <label><input type="checkbox" checked={dysYellow} onChange={e=>setDysYellow(e.target.checked)}/> Fond jaune</label><br/>
+                        <label><input type="checkbox" checked={dysBlack} onChange={e=>setDysBlack(e.target.checked)}/> Écran noir</label>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4 rounded-2xl border flex items-center justify-between" style={{backgroundColor:surface}}>
+                    <label>Audio (TTS)</label>
+                    <input type="checkbox" checked={audio} onChange={e=>setAudio(e.target.checked)}/>
+                  </div>
+                  <button onClick={start} className="px-5 py-3 rounded-2xl text-white font-semibold shadow" style={{backgroundColor:BRAND}}>Lancer le défi</button>
                 </div>
               )}
 
@@ -175,59 +230,42 @@
               {started && current && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <div className="text-sm text-slate-600">Question {index+1} / {questions.length}</div>
-                    {timeLimit!=null && (<div className="w-52"><ProgressBar value={progressPct}/></div>)}
+                    <div>Question {index+1}/{questions.length}</div>
+                    {timeLimit!=null && <div className="w-52"><ProgressBar value={progressPct}/></div>}
                   </div>
-                  <div className="rounded-3xl border bg-white p-6 text-center shadow-sm">
-                    <div className="text-slate-500 text-base mb-2">Calcule :</div>
-                    <div className="font-black text-5xl md:text-6xl mb-4">{current.a} × {current.b} = ?</div>
-                    <div className="flex items-center justify-center gap-3">
-                      <input ref={inputRef} value={input}
-                        onChange={e=>setInput(e.target.value.replace(/\D/g,""))}
-                        onKeyDown={e=>{ if(e.key==='Enter') handleSubmit(false); }}
-                        className="w-40 text-center text-3xl px-4 py-3 rounded-2xl border focus:outline-none"
-                        style={{borderColor:BRAND}} placeholder="Réponse"/>
-                      <button onClick={()=>handleSubmit(false)}
-                        className="px-5 py-3 rounded-2xl text-white font-semibold shadow"
-                        style={{backgroundColor:BRAND}}>Valider</button>
+                  <div className="rounded-3xl border p-6 text-center shadow-sm" style={{backgroundColor:surface}}>
+                    <div className="font-black text-5xl mb-4">{current.a} × {current.b} = ?</div>
+                    <div className="flex gap-3 justify-center">
+                      <input ref={inputRef} value={input} onChange={e=>setInput(e.target.value.replace(/\\D/g,\"\"))}
+                        onKeyDown={e=>{if(e.key==='Enter') handleSubmit(false);}}
+                        className="w-40 text-center text-3xl px-4 py-3 rounded-2xl border" style={{borderColor:BRAND,backgroundColor:dysBlack?'#000':'#fff',color:rootText}}/>
+                      <button onClick={()=>handleSubmit(false)} className="px-5 py-3 rounded-2xl text-white font-semibold shadow" style={{backgroundColor:BRAND}}>Valider</button>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Récap */}
+              {/* Résultats */}
               {finished && (
                 <div className="space-y-6">
-                  <div className="rounded-3xl border bg-white p-6 shadow-sm">
-                    <h2 className="text-2xl font-black mb-2">Récapitulatif</h2>
-                    <p className="text-slate-600">Score : {score} / {answers.length} ({Math.round((score/answers.length)*100)}%)</p>
+                  <div className="rounded-3xl border p-6 shadow-sm" style={{backgroundColor:surface}}>
+                    <h2 className="text-2xl font-black">Récapitulatif</h2>
+                    <p>Score : {score} / {answers.length} ({Math.round((score/answers.length)*100)}%)</p>
                   </div>
-                  <div className="rounded-3xl border bg-white p-4 shadow-sm overflow-x-auto">
+                  <div className="rounded-3xl border p-4 shadow-sm overflow-x-auto" style={{backgroundColor:surface}}>
                     <table className="w-full text-left text-sm">
-                      <thead>
-                        <tr className="text-slate-500">
-                          <th>#</th><th>Énoncé</th><th>Réponse</th><th>Correction</th><th>Statut</th>
-                        </tr>
-                      </thead>
+                      <thead><tr><th>#</th><th>Énoncé</th><th>Réponse</th><th>Correction</th><th>Statut</th></tr></thead>
                       <tbody>
                         {answers.map((r,i)=>(
                           <tr key={i} className="border-t">
-                            <td className="py-2 pr-4">{i+1}</td>
-                            <td className="py-2 pr-4">{r.a}×{r.b}</td>
-                            <td className="py-2 pr-4">{r.user ?? "—"}</td>
-                            <td className="py-2 pr-4">{r.product}</td>
-                            <td className="py-2 pr-4">
-                              {r.timeout ? "⏱ Hors délai"
-                                : r.user==null ? "— Pas de réponse"
-                                : r.correct ? "✔ Juste" : "✘ Faux"}
-                            </td>
+                            <td>{i+1}</td><td>{r.a}×{r.b}</td><td>{r.user??"—"}</td><td>{r.product}</td>
+                            <td>{r.timeout?"⏱ Hors délai":r.user==null?"— Pas de réponse":r.correct?"✔ Juste":"✘ Faux"}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-                  <button onClick={()=>{setStarted(false);setFinished(false);setAnswers([]);}}
-                    className="px-5 py-3 rounded-2xl border bg-white">Retour aux réglages</button>
+                  <button onClick={()=>{setStarted(false);setFinished(false);setAnswers([]);}} className="px-5 py-3 rounded-2xl border bg-white">Retour aux réglages</button>
                 </div>
               )}
             </div>
