@@ -1,285 +1,219 @@
-
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>Défi Tables - Sacado Académie</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      background: #f6f6ff;
-      color: #333;
-    }
-    .hidden { display: none; }
-    header {
-      background: #a88ad2;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 20px;
-    }
-    header img.logo { height: 40px; }
-    header img.dogbot { height: 60px; }
-    header h1 { color: white; font-size: 1.5rem; margin: 0; }
-    main {
-      max-width: 600px;
-      margin: 30px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-    }
-    footer {
-      text-align: center;
-      padding: 20px;
-      background: #a88ad2;
-      color: white;
-    }
-    .question { font-size: 2rem; text-align: center; margin: 20px 0; }
-    .feedback { font-weight: bold; text-align: center; margin-top: 10px; }
-    .correct { color: #27ae60; }
-    .wrong { color: #e74c3c; }
-    .recap-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    .recap-table th, .recap-table td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    .recap-table th { background-color: #a88ad2; color: white; }
-    body.dark-mode {
-      background-color: #121212;
-      color: #f0f0f0;
-    }
-    body.dark-mode main {
-      background-color: #1e1e1e;
-      color: #f0f0f0;
-    }
-    body.dark-mode input,
-    body.dark-mode select {
-      background-color: #2a2a2a;
-      color: #f0f0f0;
-    }
-    body.dark-mode .recap-table th {
-      background-color: #5555aa;
-    }
-  
-@import url('https://fonts.googleapis.com/css2?family=OpenDyslexic&display=swap');
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SACADO - Défi Tables</title>
+    <!-- React + ReactDOM via CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <!-- Babel pour transformer JSX directement dans le navigateur -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Tailwind via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body { margin:0; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
 
-body.dys-font {
-  font-family: 'OpenDyslexic', sans-serif;
-}
+    <script type="text/babel">
+      const { useState, useEffect, useMemo, useRef } = React;
+      const BRAND = "#8374a7";
+      const TABLE_MIN = 2, TABLE_MAX = 10;
 
+      function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
 
-@import url('https://fonts.googleapis.com/css2?family=Lexend+Deca&display=swap');
-
-body.lexend-font {
-  font-family: 'Lexend Deca', sans-serif;
-}
-
-</style>
-</head>
-<body>
-  <header>
-    <img src="sacadoLogo.png" class="logo" alt="Logo Sacado" />
-    <h1>Sacado Académie</h1>
-    <img src="dogbot.png" class="dogbot" alt="DogBot" />
-  </header>
-  <main>
-    <div id="parametres">
-      <h2>🎯 Défi Tables</h2>
-      <p><strong>Choisis les tables :</strong></p>
-      <div class="checkboxes">
-        <label><input type="checkbox" value="2"> 2</label>
-        <label><input type="checkbox" value="3"> 3</label>
-        <label><input type="checkbox" value="4"> 4</label>
-        <label><input type="checkbox" value="5"> 5</label>
-        <label><input type="checkbox" value="6"> 6</label>
-        <label><input type="checkbox" value="7"> 7</label>
-        <label><input type="checkbox" value="8"> 8</label>
-        <label><input type="checkbox" value="9"> 9</label>
-        <label><input type="checkbox" value="10"> 10</label>
-      </div>
-      <p><strong>Délai :</strong>
-        <select id="delai">
-          <option value="0">Pas de limite</option>
-          <option value="3">3s</option>
-          <option value="5">5s</option>
-          <option value="10">10s</option>
-        </select>
-      </p>
-      <p><label><input type="checkbox" id="audio"> 🔈 Lecture audio des questions</label></p>
-      <p><strong>Nombre de questions :</strong>
-        <select id="nombre">
-          <option value="5">5</option>
-          <option value="10" selected>10</option>
-          <option value="15">15</option>
-          <option value="20">20</option>
-        </select>
-      </p>
-      <p><label></label><br><label for="font-select">Police lisible :</label> <select id="font-select"><option value="">Standard</option><option value="dys-font">OpenDyslexic</option><option value="lexend-font">Lexend Deca</option></select><br><label><input type="checkbox" id="dysmode"> 🌙 Mode visuel dys</label></p>
-      <button onclick="lancerDefi()">Lancer le défi</button>
-    </div>
-
-    <div id="jeu" class="hidden">
-      <div id="compteur"></div>
-<div id="progressbar" style="height: 10px; background: #a88ad2; width: 100%; transition: none;"></div>
-      <div class="question" id="question"></div>
-      <input type="number" id="reponse" placeholder="Ta réponse" />
-      <button onclick="validerReponse()">Valider</button> <button id="btn-stop" onclick="arreterDefi()">⏹️ Arrêter</button>
-      <div class="feedback" id="feedback"></div>
-    </div>
-
-    <div id="resultat" class="hidden result"></div>
-  </main>
-  <footer>
-    © 2025 Sacado - Défi Tables
-  </footer>
-  <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const champ = document.getElementById("reponse");
-  if (champ) {
-    champ.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") validerReponse();
-    });
-  }
-  
-  const dysFont = document.getElementById("dysfont");
-  if (dysFont) {
-    dysFont.addEventListener("change", () => {
-      document.body.classList.toggle("dys-font", dysFont.checked);
-    });
-  }
-
-  
-  const fontSelect = document.getElementById("font-select");
-  if (fontSelect) {
-    fontSelect.addEventListener("change", () => {
-      document.body.classList.remove("dys-font", "lexend-font");
-      if (fontSelect.value) {
-        document.body.classList.add(fontSelect.value);
+      function ProgressBar({ value }) {
+        return (
+          <div className="w-full h-3 rounded-full bg-slate-200 overflow-hidden">
+            <div className="h-full transition-all" style={{width: \`\${clamp(value,0,100)}%\`, backgroundColor: BRAND}}/>
+          </div>
+        );
       }
-    });
-  }
 
-  const dysToggle = document.getElementById("dysmode");
-  if (dysToggle) {
-    dysToggle.addEventListener("change", () => {
-      document.body.classList.toggle("dark-mode", dysToggle.checked);
-    });
-  }
-});
+      const TogglePill = ({ active, children, onClick }) => (
+        <button onClick={onClick}
+          className={"px-3 py-1 rounded-full border text-sm transition select-none "+
+          (active ? "text-white" : "bg-white border-slate-300 hover:shadow")}
+          style={{
+            backgroundColor: active ? BRAND : undefined,
+            borderColor: active ? BRAND : undefined,
+            fontWeight: active ? 700 : 500,
+            color: active ? "#fff" : undefined,
+          }}
+        >{children}</button>
+      );
 
-function lireQuestion(q) {
-  const audioChecked = document.getElementById("audio")?.checked;
-  if (!audioChecked || !window.speechSynthesis) return;
-  const utterance = new SpeechSynthesisUtterance(`${q.a} fois ${q.b}`);
-  utterance.lang = "fr-FR";
-  speechSynthesis.speak(utterance);
-}
+      function TopBar(){
+        return (
+          <div className="mb-4 rounded-3xl overflow-hidden shadow-sm border">
+            <div className="px-4 py-3 text-white flex items-center justify-between" style={{backgroundColor:BRAND}}>
+              <div className="flex items-center gap-3">
+                <img src="sacadoLogo.png" alt="SACADO académie" className="h-8 w-8 rounded-lg bg-white/90 p-1"/>
+                <div>
+                  <div className="font-black leading-tight">SACADO académie</div>
+                  <div className="text-xs opacity-90">Jeux d'automatismes — Défi Tables</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="hidden sm:inline text-sm">dogbot</span>
+                <img src="dogbot.png" alt="dogbot" className="h-8 w-8 rounded-full bg-white/90 p-0.5 object-cover"/>
+              </div>
+            </div>
+          </div>
+        );
+      }
 
-let questions = [], index = 0, score = 0, timer = null, recap = [];
+      function DefiTablesApp(){
+        const [selectedTables,setSelectedTables]=useState(Array.from({length:TABLE_MAX-TABLE_MIN+1},(_,i)=>TABLE_MIN+i));
+        const [questionCount,setQuestionCount]=useState(10);
+        const [timeLimit,setTimeLimit]=useState(5); // null = pas de limite
+        const [started,setStarted]=useState(false);
+        const [finished,setFinished]=useState(false);
+        const [questions,setQuestions]=useState([]);
+        const [index,setIndex]=useState(0);
+        const [input,setInput]=useState("");
+        const [tick,setTick]=useState(0);
+        const [answers,setAnswers]=useState([]);
+        const inputRef=useRef(null);
 
-function lancerDefi() {
-  const tables = Array.from(document.querySelectorAll('.checkboxes input:checked')).map(cb => parseInt(cb.value));
-  const nombre = parseInt(document.getElementById('nombre').value);
-  const delai = parseInt(document.getElementById('delai').value);
-  if (tables.length === 0) {
-    alert("Choisis au moins une table !");
-    return;
-  }
-  const combinaisons = new Set();
-  questions = [];
-  let tries = 0;
-  while (questions.length < nombre && tries < 1000) {
-    const a = tables[Math.floor(Math.random() * tables.length)];
-    const b = Math.floor(Math.random() * 10) + 1;
-    const key = `${Math.min(a,b)}x${Math.max(a,b)}`;
-    tries++; 
-    if (!combinaisons.has(key)) {
-      combinaisons.add(key);
-      questions.push({ a, b, produit: a * b });
-    }
-  }
+        useEffect(()=>{
+          if(!started||finished) return;
+          const id=setInterval(()=>setTick(t=>t+1),1000);
+          return ()=>clearInterval(id);
+        },[started,finished]);
 
-  index = 0; score = 0; recap = [];
-  document.getElementById('parametres').classList.add('hidden');
-  document.getElementById('jeu').classList.remove('hidden');
-  document.getElementById('resultat').classList.add('hidden');
-  afficherQuestion(delai);
-}
+        useEffect(()=>{
+          if(!started||finished) return;
+          if(timeLimit!=null && tick>=timeLimit){ handleSubmit(true); }
+        },[tick]);
 
-function demarrerChrono(delai) {
-  const bar = document.getElementById('progressbar');
-  if (!bar || delai <= 0) return;
-  bar.style.transition = 'none';
-  bar.style.width = '100%';
-  setTimeout(() => {
-    bar.style.transition = `width ${delai}s linear`;
-    bar.style.width = '0%';
-  }, 50);
-}
+        const start=()=>{
+          const list=[];
+          for(let i=0;i<questionCount;i++){
+            const a=selectedTables[Math.floor(Math.random()*selectedTables.length)];
+            const b=Math.floor(Math.random()*9)+2;
+            list.push({a,b,product:a*b});
+          }
+          setQuestions(list);
+          setIndex(0); setAnswers([]); setInput(""); setTick(0);
+          setStarted(true); setFinished(false);
+          setTimeout(()=>inputRef.current?.focus(),0);
+        };
 
-function afficherQuestion(delai) {
-  const q = questions[index];
-  document.getElementById('question').textContent = `${q.a} × ${q.b} = ?`;
-  document.getElementById('reponse').value = '';
-  document.getElementById('reponse').focus();
-  lireQuestion(q);
-  document.getElementById('feedback').textContent = '';
-  document.getElementById('compteur').textContent = `Question ${index + 1} sur ${questions.length}`;
-  demarrerChrono(delai);
-  if (delai > 0) {
-    clearTimeout(timer);
-    timer = setTimeout(() => validerReponse(true), delai * 1000);
-  }
-}
+        const current=questions[index];
+        const progressPct=useMemo(()=>{
+          if(!started) return 0;
+          if(timeLimit==null) return 100;
+          const total=timeLimit, remaining=clamp(total-tick,0,total);
+          return (remaining/total)*100;
+        },[started,tick,timeLimit]);
 
-function validerReponse(forceTemps = false) {
-  const q = questions[index];
-  const inputVal = document.getElementById('reponse').value;
-  const userInput = inputVal === '' ? null : parseInt(inputVal);
-  clearTimeout(timer);
-  const feedback = document.getElementById('feedback');
-  let success = false;
-  if (userInput === q.produit && !forceTemps) {
-    feedback.textContent = "✅ Bravo !";
-    feedback.className = "feedback correct";
-    score++;
-    success = true;
-  } else {
-    feedback.textContent = `❌ Raté ! La bonne réponse était ${q.produit}`;
-    feedback.className = "feedback wrong";
-  }
-  recap.push({
-    question: `${q.a} × ${q.b}`,
-    attendu: q.produit,
-    reponse: forceTemps ? "Temps écoulé" : (userInput === null || isNaN(userInput) ? "pas de réponse" : userInput),
-    correct: success
-  });
-  index++;
-  setTimeout(() => index < questions.length ? afficherQuestion(parseInt(document.getElementById('delai').value)) : afficherResultat(), 1000);
-}
+        const handleSubmit=(timeout=false)=>{
+          if(!current) return;
+          const userNum=Number(input);
+          const userProvided=input!=="";
+          const correct=!timeout && userProvided && userNum===current.product;
+          const record={a:current.a,b:current.b,product:current.product,
+                        user:timeout?null:(userProvided?userNum:null),
+                        correct,time:timeLimit!=null?Math.min(tick,timeLimit):tick,
+                        timeout};
+          setAnswers(prev=>[...prev,record]);
+          if(index+1>=questions.length){ setFinished(true); setStarted(false); }
+          else{ setIndex(i=>i+1); setTick(0); setInput(""); }
+        };
 
-function afficherResultat() {
-  document.getElementById('jeu').classList.add('hidden');
-  const res = document.getElementById('resultat');
-  res.classList.remove('hidden');
-  let html = `<h2>🎉 Fin du défi !</h2><p>Tu as obtenu <strong>${score}</strong> bonne(s) réponse(s) sur ${recap.length}.</p>`;
-  html += '<table class="recap-table"><thead><tr><th>#</th><th>Opération</th><th>Réponse élève</th><th>Correction</th></tr></thead><tbody>';
-  recap.forEach((r, i) => {
-    html += `<tr><td>${i+1}</td><td>${r.question}</td><td class="${r.correct ? 'correct' : 'wrong'}">${r.reponse}</td><td>${r.attendu}</td></tr>`;
-  });
-  html += '</tbody></table><button onclick="location.reload()">Rejouer</button>';
-  res.innerHTML = html;
-}
-  </script>
-</body>
-</html>
+        const score=useMemo(()=>answers.filter(a=>a.correct).length,[answers]);
 
-<script>
-function arreterDefi() {
-  if (confirm("Es-tu sûr de vouloir arrêter le défi ?")) {
-    afficherResultat();
-  }
-}
-</script>
-</body>
+        return (
+          <div className="min-h-screen p-6 bg-slate-50">
+            <div className="max-w-4xl mx-auto space-y-6">
+              <TopBar/>
+              {!started && !finished && (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl border bg-white">
+                    <label className="block text-sm text-slate-600 mb-2">Tables</label>
+                    <div className="flex flex-wrap gap-2">
+                      {[2,3,4,5,6,7,8,9,10].map(n=>(
+                        <TogglePill key={n} active={selectedTables.includes(n)}
+                          onClick={()=>setSelectedTables(prev=>prev.includes(n)?prev.filter(x=>x!==n):[...prev,n])}>{n}</TogglePill>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-2xl border bg-white">
+                    <label className="block text-sm text-slate-600 mb-2">Nombre de questions</label>
+                    <div className="flex gap-2 flex-wrap">
+                      {[5,10,15,20].map(n=>(
+                        <TogglePill key={n} active={questionCount===n} onClick={()=>setQuestionCount(n)}>{n}</TogglePill>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-2xl border bg-white">
+                    <label className="block text-sm text-slate-600 mb-2">Temps par question</label>
+                    <div className="flex gap-2 flex-wrap">
+                      {[3,5,10].map(s=>(
+                        <TogglePill key={s} active={timeLimit===s} onClick={()=>setTimeLimit(s)}>{s}s</TogglePill>
+                      ))}
+                      <TogglePill active={timeLimit==null} onClick={()=>setTimeLimit(null)}>Pas de limite</TogglePill>
+                    </div>
+                  </div>
+                  <button onClick={start} className="px-5 py-3 rounded-2xl text-white font-semibold shadow" style={{backgroundColor:BRAND}}>Lancer le défi</button>
+                </div>
+              )}
+              {started && current && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-slate-600">Question {index+1} / {questions.length}</div>
+                    {timeLimit!=null && (<div className="w-52"><ProgressBar value={progressPct}/></div>)}
+                  </div>
+                  <div className="rounded-3xl border bg-white p-6 text-center shadow-sm">
+                    <div className="text-slate-500 text-base mb-2">Calcule :</div>
+                    <div className="font-black text-5xl md:text-6xl mb-4">{current.a} × {current.b} = ?</div>
+                    <div className="flex items-center justify-center gap-3">
+                      <input ref={inputRef} value={input} onChange={e=>setInput(e.target.value.replace(/\\D/g,\"\"))}
+                        onKeyDown={e=>{ if(e.key==='Enter') handleSubmit(false); }}
+                        className="w-40 text-center text-3xl px-4 py-3 rounded-2xl border focus:outline-none" style={{borderColor:BRAND}}
+                        placeholder="Réponse"/>
+                      <button onClick={()=>handleSubmit(false)} className="px-5 py-3 rounded-2xl text-white font-semibold shadow" style={{backgroundColor:BRAND}}>Valider</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {finished && (
+                <div className="space-y-6">
+                  <div className="rounded-3xl border bg-white p-6 shadow-sm">
+                    <h2 className="text-2xl font-black mb-2">Récapitulatif</h2>
+                    <p className="text-slate-600">Score : {score} / {answers.length} ({Math.round((score/answers.length)*100)}%)</p>
+                  </div>
+                  <div className="rounded-3xl border bg-white p-4 shadow-sm overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead><tr className="text-slate-500">
+                        <th>#</th><th>Énoncé</th><th>Réponse</th><th>Correction</th><th>Statut</th>
+                      </tr></thead>
+                      <tbody>
+                        {answers.map((r,i)=>(
+                          <tr key={i} className="border-t">
+                            <td>{i+1}</td>
+                            <td>{r.a}×{r.b}</td>
+                            <td>{r.user ?? "—"}</td>
+                            <td>{r.product}</td>
+                            <td>{r.timeout?"⏱ Hors délai":r.user==null?"— Pas de réponse":r.correct?"✔ Juste":"✘ Faux"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <button onClick={()=>{setStarted(false);setFinished(false);setAnswers([]);}} className="px-5 py-3 rounded-2xl border bg-white">Retour aux réglages</button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<DefiTablesApp/>);
+    </script>
+  </body>
 </html>
