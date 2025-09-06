@@ -4,13 +4,13 @@
     <meta charset="UTF-8" />
     <meta http-equiv="Cache-Control" content="no-store" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SACADO - Défi Tables (Dys) v5</title>
+    <title>SACADO - Défi Tables (Dys) v6</title>
 
-    <!-- React + ReactDOM (PROD UMD) en premier -->
+    <!-- React + ReactDOM (prod UMD) -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 
-    <!-- Babel (doit venir AVANT le script type="text/babel") -->
+    <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <!-- Tailwind -->
@@ -18,93 +18,97 @@
 
     <style>
       body { margin: 0; }
-      /* Polices locales optionnelles (dépose les .woff2 à la racine du repo) */
-      @font-face { font-family: 'OpenDyslexicLocal'; src: url('OpenDyslexic3-Regular.woff2') format('woff2'); font-display: swap; }
-      @font-face { font-family: 'EasyReadingLocal'; src: url('EasyReading-Regular.woff2') format('woff2'); font-display: swap; }
-      @font-face { font-family: 'DyslexieLocal'; src: url('Dyslexie-Regular.woff2') format('woff2'); font-display: swap; }
-      /* Bandeau version visible (debug) */
+
+      /* ===== Polices locales =====
+         Tu as des .OTF : on les référence ici.
+         On garde aussi la source .woff2 au cas où tu l'ajoutes plus tard. */
+      @font-face {
+        font-family: 'OpenDyslexicLocal';
+        src: url('OpenDyslexic3-Regular.woff2') format('woff2'),
+             url('OpenDyslexic-Regular.otf') format('opentype'),
+             url('OpenDyslexicAlta-Regular.otf') format('opentype'),
+             url('OpenDyslexicMono-Regular.otf') format('opentype');
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'EasyReadingLocal';
+        src: url('EasyReading-Regular.woff2') format('woff2'); /* si tu l’ajoutes un jour */
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'DyslexieLocal';
+        src: url('Dyslexie-Regular.woff2') format('woff2'); /* si tu l’ajoutes un jour */
+        font-display: swap;
+      }
+
+      /* Badge version */
       .version-badge {
         position: fixed; bottom: 8px; left: 8px; z-index: 9999;
         background: #8374a7; color: #fff; padding: 4px 8px; border-radius: 8px;
         font: 12px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       }
-      /* Overlay d'erreurs */
+
+      /* Overlay erreurs (debug) */
       #errbox {
         position: fixed; top: 0; left: 0; right:0; z-index: 10000;
         background: #fee2e2; color: #7f1d1d; border-bottom: 1px solid #fecaca;
         font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         padding: 8px 12px; display: none; white-space: pre-wrap;
       }
-      #errbox b { color: #991b1b; }
     </style>
   </head>
   <body>
     <div id="errbox"></div>
     <div id="root"></div>
-    <div class="version-badge">DEFIS-TABLES v5</div>
+    <div class="version-badge">DEFIS-TABLES v6</div>
 
-    <!-- Catcher global des erreurs JS -->
+    <!-- Catcher global erreurs -->
     <script>
       (function () {
-        var box = null;
-        function show(msg) {
-          box = box || document.getElementById('errbox');
-          box.style.display = 'block';
-          box.textContent = "[Erreur] " + msg;
-        }
-        window.addEventListener('error', function (e) {
-          try { show(e.message + (e.filename ? " @ " + e.filename : "")); } catch (_) {}
-        });
-        window.addEventListener('unhandledrejection', function (e) {
-          try { show("Promise rejetée: " + (e.reason && (e.reason.stack || e.reason.message || String(e.reason)))); } catch (_) {}
-        });
-        // Sanity check: React/ReactDOM présents ?
-        if (!window.React || !window.ReactDOM) {
-          show("React ou ReactDOM non chargés — vérifie les CDN en <head>.");
-        }
+        var box = document.getElementById('errbox');
+        function show(msg) { box.style.display = 'block'; box.textContent = "[Erreur] " + msg; }
+        window.addEventListener('error', e => { try{ show(e.message); }catch(_){} });
+        window.addEventListener('unhandledrejection', e => { try{ show("Promise rejetée: " + (e.reason && (e.reason.stack||e.reason.message||String(e.reason)))); }catch(_){} });
+        if (!window.React || !window.ReactDOM) show("React/ReactDOM non chargés.");
       })();
     </script>
 
-    <!-- Application React en JSX (Babel doit avoir les PRESETS) -->
+    <!-- App -->
     <script type="text/babel" data-presets="env,react">
       const { useState, useEffect, useMemo, useRef } = React;
-
       const BRAND = "#8374a7";
       const TABLE_MIN = 2, TABLE_MAX = 10;
 
-      const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+      const clamp = (n,min,max) => Math.max(min, Math.min(max, n));
 
-      const ProgressBar=({value})=>(
+      const ProgressBar = ({ value }) => (
         <div className="w-full h-3 rounded-full bg-slate-200 overflow-hidden">
-          <div className="h-full transition-all" style={{width:`${clamp(value,0,100)}%`,backgroundColor:BRAND}}/>
+          <div className="h-full transition-all" style={{width:`${clamp(value,0,100)}%`, backgroundColor:BRAND}}/>
         </div>
       );
 
-      const TogglePill=({active,children,onClick})=>(
+      const TogglePill = ({ active, children, onClick }) => (
         <button onClick={onClick}
-          className={"px-3 py-1 rounded-full border text-sm transition select-none "+
-          (active?"text-white":"bg-white border-slate-300 hover:shadow")}
-          style={{
-            backgroundColor:active?BRAND:undefined,
-            borderColor:active?BRAND:undefined,
-            fontWeight:active?700:500,
-            color:active?"#fff":undefined,
-          }}>{children}</button>
+          className={"px-3 py-1 rounded-full border text-sm transition select-none " + (active ? "text-white" : "bg-white border-slate-300 hover:shadow")}
+          style={{ backgroundColor: active ? BRAND : undefined, borderColor: active ? BRAND : undefined, fontWeight: active ? 700 : 500, color: active ? "#fff" : undefined }}
+        >{children}</button>
       );
 
-      const TopBar=()=>(
+      const TopBar = () => (
         <div className="mb-4 rounded-3xl overflow-hidden shadow-sm border">
           <div className="px-4 py-3 text-white flex items-center justify-between" style={{backgroundColor:BRAND}}>
             <div className="flex items-center gap-3">
-              <img src="sacadoLogo.png?v=5" alt="SACADO" className="h-8 w-8 rounded-lg bg-white/90 p-1"/>
+              <img src="sacadoLogo.png?v=6" alt="SACADO" className="h-8 w-8 rounded-lg bg-white/90 p-1"/>
               <div>
                 <div className="font-black leading-tight">SACADO académie</div>
                 <div className="text-xs opacity-90">Défi Tables</div>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="hidden sm:inline text-sm">dogbot</span>
-              <img src="dogbot.png?v=5" alt="dogbot" className="h-8 w-8 rounded-full bg-white/90 p-0.5 object-cover"/>
+              <!-- retiré le mot 'dogbot' -->
+              <img src="dogbot.png?v=6" alt="dogbot" className="h-8 w-8 rounded-full bg-white/90 p-0.5 object-cover"/>
             </div>
           </div>
         </div>
@@ -116,7 +120,7 @@
         const [questionCount,setQuestionCount]=useState(10);
         const [timeLimit,setTimeLimit]=useState(5); // null = Pas de limite
 
-        // État du quiz
+        // Quiz
         const [started,setStarted]=useState(false);
         const [finished,setFinished]=useState(false);
         const [questions,setQuestions]=useState([]);
@@ -126,7 +130,7 @@
         const [answers,setAnswers]=useState([]);
         const inputRef=useRef(null);
 
-        // Options dys
+        // Dys
         const [dysMode,setDysMode]=useState(false);
         const [dysFont,setDysFont]=useState("Arial");
         const [dysSize,setDysSize]=useState(16);
@@ -134,43 +138,21 @@
         const [dysBlack,setDysBlack]=useState(false);
         const [audio,setAudio]=useState(false);
 
-        useEffect(()=>{
-          document.body.style.fontSize = dysMode ? `${dysSize}px` : "16px";
-        },[dysMode,dysSize]);
+        useEffect(()=>{ document.body.style.fontSize = dysMode ? `${dysSize}px` : "16px"; },[dysMode,dysSize]);
 
-        const surface = dysBlack ? "#111111" : (dysYellow ? "#fff2a8" : "#ffffff");
+        // Couleurs: IMPORTANT -> on force aussi la couleur du texte (rootText)
         const rootBg  = dysBlack ? "#000000" : (dysYellow ? "#fff7cc" : "#f8fafc");
-        const rootTxt = dysBlack ? "#f8fafc" : undefined;
+        const surface = dysBlack ? "#111111" : (dysYellow ? "#fff2a8" : "#ffffff");
+        const rootText = dysBlack ? "#f8fafc" : undefined; // clair en noir
 
         // Timer
-        useEffect(()=>{
-          if(!started||finished) return;
-          const id=setInterval(()=>setTick(t=>t+1),1000);
-          return ()=>clearInterval(id);
-        },[started,finished]);
-
-        useEffect(()=>{
-          if(!started||finished) return;
-          if(timeLimit!=null && tick>=timeLimit) handleSubmit(true);
-        },[tick]);
+        useEffect(()=>{ if(!started||finished) return; const id=setInterval(()=>setTick(t=>t+1),1000); return ()=>clearInterval(id); },[started,finished]);
+        useEffect(()=>{ if(!started||finished) return; if(timeLimit!=null && tick>=timeLimit) handleSubmit(true); },[tick]);
 
         // Audio
-        const speak=(txt)=>{
-          try{
-            if(!audio) return;
-            const u=new SpeechSynthesisUtterance(txt);
-            u.lang="fr-FR";
-            window.speechSynthesis.cancel();
-            window.speechSynthesis.speak(u);
-          }catch(e){}
-        };
+        const speak=(txt)=>{ try{ if(!audio) return; const u=new SpeechSynthesisUtterance(txt); u.lang="fr-FR"; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); }catch(e){} };
 
-        useEffect(()=>{
-          if(started && !finished && questions[index]){
-            const q = questions[index];
-            speak(`${q.a} multiplié par ${q.b}`);
-          }
-        },[index,started,finished]);
+        useEffect(()=>{ if(started && !finished && questions[index]){ const q=questions[index]; speak(`${q.a} multiplié par ${q.b}`);} },[index,started,finished]);
 
         const start=()=>{
           const list=[];
@@ -183,7 +165,7 @@
           setIndex(0); setAnswers([]); setInput(""); setTick(0);
           setStarted(true); setFinished(false);
           setTimeout(()=>inputRef.current?.focus(),0);
-          if(audio) speak(`Prépare-toi. Première question.`);
+          if(audio) speak("Prépare-toi. Première question.");
         };
 
         const current=questions[index];
@@ -200,13 +182,9 @@
           const userProvided = input !== "";
           const correct = !timeout && userProvided && userNum === current.product;
 
-          const record = {
-            a: current.a, b: current.b, product: current.product,
+          const record = { a:current.a, b:current.b, product:current.product,
             user: timeout ? null : (userProvided ? userNum : null),
-            correct,
-            time: timeLimit!=null ? Math.min(tick,timeLimit) : tick,
-            timeout
-          };
+            correct, time: timeLimit!=null ? Math.min(tick,timeLimit) : tick, timeout };
           setAnswers(prev=>[...prev,record]);
 
           if(!correct){
@@ -223,22 +201,25 @@
 
         // Police effective
         const fontFamily =
-          dysFont==="Verdana"     ? "Verdana, Geneva, Tahoma, sans-serif" :
-          dysFont==="OpenDyslexic"? "OpenDyslexicLocal, Arial, sans-serif" :
-          dysFont==="EasyReading" ? "EasyReadingLocal, Arial, sans-serif" :
-          dysFont==="Dyslexie"    ? "DyslexieLocal, Arial, sans-serif" :
-                                    "Arial, Helvetica, sans-serif";
+          dysFont==="Verdana"      ? "Verdana, Geneva, Tahoma, sans-serif" :
+          dysFont==="OpenDyslexic" ? "OpenDyslexicLocal, Arial, sans-serif" :
+          dysFont==="EasyReading"  ? "EasyReadingLocal, Arial, sans-serif" :
+          dysFont==="Dyslexie"     ? "DyslexieLocal, Arial, sans-serif" :
+                                     "Arial, Helvetica, sans-serif";
+
+        // Helper style pour cartes: applique aussi la couleur de texte quand écran noir
+        const cardStyle = { backgroundColor: surface, color: rootText };
 
         return (
-          <div className="min-h-screen p-6" style={{backgroundColor:rootBg,color:rootTxt,fontFamily}}>
+          <div className="min-h-screen p-6" style={{ backgroundColor: rootBg, color: rootText, fontFamily }}>
             <div className="max-w-4xl mx-auto space-y-6">
               <TopBar/>
 
               {/* Réglages */}
               {!started && !finished && (
                 <div className="space-y-4">
-                  <div className="p-4 rounded-2xl border" style={{backgroundColor:surface}}>
-                    <label className="block text-sm mb-2">Tables</label>
+                  <div className="p-4 rounded-2xl border" style={cardStyle}>
+                    <label className="block text-sm mb-2" style={{color: rootText}}>Tables</label>
                     <div className="flex flex-wrap gap-2">
                       {[2,3,4,5,6,7,8,9,10].map(n=>(
                         <TogglePill key={n} active={selectedTables.includes(n)}
@@ -246,16 +227,18 @@
                       ))}
                     </div>
                   </div>
-                  <div className="p-4 rounded-2xl border" style={{backgroundColor:surface}}>
-                    <label className="block text-sm mb-2">Nombre de questions</label>
+
+                  <div className="p-4 rounded-2xl border" style={cardStyle}>
+                    <label className="block text-sm mb-2" style={{color: rootText}}>Nombre de questions</label>
                     <div className="flex gap-2 flex-wrap">
                       {[5,10,15,20].map(n=>(
                         <TogglePill key={n} active={questionCount===n} onClick={()=>setQuestionCount(n)}>{n}</TogglePill>
                       ))}
                     </div>
                   </div>
-                  <div className="p-4 rounded-2xl border" style={{backgroundColor:surface}}>
-                    <label className="block text-sm mb-2">Temps par question</label>
+
+                  <div className="p-4 rounded-2xl border" style={cardStyle}>
+                    <label className="block text-sm mb-2" style={{color: rootText}}>Temps par question</label>
                     <div className="flex gap-2 flex-wrap">
                       {[3,5,10].map(s=>(
                         <TogglePill key={s} active={timeLimit===s} onClick={()=>setTimeLimit(s)}>{s}s</TogglePill>
@@ -265,8 +248,8 @@
                   </div>
 
                   {/* Options Dys */}
-                  <div className="p-4 rounded-2xl border" style={{backgroundColor:surface}}>
-                    <label className="flex items-center gap-2">
+                  <div className="p-4 rounded-2xl border" style={cardStyle}>
+                    <label className="flex items-center gap-2" style={{color: rootText}}>
                       <input type="checkbox" checked={dysMode} onChange={e=>setDysMode(e.target.checked)}/> Mode dys
                     </label>
                     {dysMode && (
@@ -290,7 +273,7 @@
                   </div>
 
                   {/* Audio */}
-                  <div className="p-4 rounded-2xl border flex items-center justify-between" style={{backgroundColor:surface}}>
+                  <div className="p-4 rounded-2xl border flex items-center justify-between" style={cardStyle}>
                     <label>Audio (TTS) – lire les énoncés</label>
                     <input type="checkbox" checked={audio} onChange={e=>setAudio(e.target.checked)}/>
                   </div>
@@ -308,14 +291,14 @@
                     <div>Question {index+1}/{questions.length}</div>
                     {timeLimit!=null && <div className="w-52"><ProgressBar value={progressPct}/></div>}
                   </div>
-                  <div className="rounded-3xl border p-6 text-center shadow-sm" style={{backgroundColor:surface}}>
+                  <div className="rounded-3xl border p-6 text-center shadow-sm" style={cardStyle}>
                     <div className="font-black text-5xl mb-4">{questions[index].a} × {questions[index].b} = ?</div>
                     <div className="flex gap-3 justify-center">
                       <input ref={inputRef} value={input}
                         onChange={e=>setInput(e.target.value.replace(/\D/g,""))}
                         onKeyDown={e=>{ if(e.key==='Enter') handleSubmit(false); }}
                         className="w-40 text-center text-3xl px-4 py-3 rounded-2xl border"
-                        style={{borderColor:BRAND, backgroundColor:dysBlack?'#000':'#fff', color:rootTxt}}
+                        style={{borderColor:BRAND, backgroundColor:dysBlack?'#000':'#fff', color:rootText}}
                         placeholder="Réponse"/>
                       <button onClick={()=>handleSubmit(false)} className="px-5 py-3 rounded-2xl text-white font-semibold shadow" style={{backgroundColor:BRAND}}>
                         Valider
@@ -328,11 +311,11 @@
               {/* Récap */}
               {finished && (
                 <div className="space-y-6">
-                  <div className="rounded-3xl border p-6 shadow-sm" style={{backgroundColor:surface}}>
+                  <div className="rounded-3xl border p-6 shadow-sm" style={cardStyle}>
                     <h2 className="text-2xl font-black">Récapitulatif</h2>
                     <p>Score : {answers.filter(a=>a.correct).length} / {answers.length} ({Math.round((answers.filter(a=>a.correct).length/answers.length)*100)}%)</p>
                   </div>
-                  <div className="rounded-3xl border p-4 shadow-sm overflow-x-auto" style={{backgroundColor:surface}}>
+                  <div className="rounded-3xl border p-4 shadow-sm overflow-x-auto" style={cardStyle}>
                     <table className="w-full text-left text-sm">
                       <thead><tr><th>#</th><th>Énoncé</th><th>Réponse</th><th>Correction</th><th>Statut</th></tr></thead>
                       <tbody>
@@ -349,16 +332,13 @@
                     </table>
                   </div>
                   <button onClick={()=>{ setStarted(false); setFinished(false); setAnswers([]); }}
-                    className="px-5 py-3 rounded-2xl border bg-white">Retour aux réglages</button>
+                    className="px-5 py-3 rounded-2xl border" style={cardStyle}>Retour aux réglages</button>
                 </div>
               )}
             </div>
           </div>
         );
       }
-
-      // Sanity log (dev visible dans F12): versions chargées
-      console.log("React", React?.version, "ReactDOM", ReactDOM?.version, "Babel", Babel?.version);
 
       ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
     </script>
