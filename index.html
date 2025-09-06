@@ -1,10 +1,10 @@
-      <!DOCTYPE html>
+   <!DOCTYPE html>
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="Cache-Control" content="no-store" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SACADO - Défi Tables (Dys) v7</title>
+    <title>SACADO - Défi Tables (Dys) v8</title>
 
     <!-- React + ReactDOM (prod UMD) -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -19,7 +19,7 @@
     <style>
       body { margin: 0; }
 
-      /* Polices locales */
+      /* Polices locales (OpenDyslexic .otf déjà dans ton repo) */
       @font-face {
         font-family: 'OpenDyslexicLocal';
         src: url('OpenDyslexic3-Regular.woff2') format('woff2'),
@@ -31,14 +31,13 @@
       @font-face { font-family: 'EasyReadingLocal'; src: url('EasyReading-Regular.woff2') format('woff2'); font-display: swap; }
       @font-face { font-family: 'DyslexieLocal';   src: url('Dyslexie-Regular.woff2') format('woff2');   font-display: swap; }
 
-      /* Badge version */
       .version-badge {
         position: fixed; bottom: 8px; left: 8px; z-index: 9999;
         background: #8374a7; color: #fff; padding: 4px 8px; border-radius: 8px;
         font: 12px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       }
 
-      /* --- MODE ÉCRAN NOIR forcé --- */
+      /* -------- MODE ÉCRAN NOIR (contraste forcé) -------- */
       .dark-mode, .dark-mode * { color: #f8fafc !important; }
       .dark-mode a { color: #bfdbfe !important; }
       .dark-mode .card { background: #111111 !important; border-color: #334155 !important; }
@@ -48,11 +47,24 @@
       .dark-mode ::placeholder { color: #94a3b8 !important; opacity: 1; }
       .dark-mode table thead th { color: #f8fafc !important; }
       .dark-mode .muted { color: #d1d5db !important; }
+
+      /* Pills lisibles en noir */
+      .dark-mode .pill {
+        background: #ffffff !important;
+        border-color: #e5e7eb !important;
+        color: #111827 !important; /* texte noir */
+      }
+      /* Checkbox lisible + accent violet */
+      .dark-mode input[type="checkbox"] {
+        background: #000 !important;
+        border-color: #94a3b8 !important;
+        accent-color: #8374a7;
+      }
     </style>
   </head>
   <body>
     <div id="root"></div>
-    <div class="version-badge">DEFIS-TABLES v7</div>
+    <div class="version-badge">DEFIS-TABLES v8</div>
 
     <script type="text/babel" data-presets="env,react">
       const { useState, useEffect, useMemo, useRef } = React;
@@ -67,11 +79,20 @@
         </div>
       );
 
+      /* pill class + texte noir quand inactive */
       const TogglePill = ({ active, children, onClick }) => (
-        <button onClick={onClick}
-          className={"px-3 py-1 rounded-full border text-sm transition select-none "+
-          (active?"text-white":"bg-white border-slate-300 hover:shadow")}
-          style={{ backgroundColor: active ? BRAND : undefined, borderColor: active ? BRAND : undefined, fontWeight: active ? 700 : 500, color: active ? "#fff" : undefined }}
+        <button
+          onClick={onClick}
+          className={
+            "pill px-3 py-1 rounded-full border text-sm transition select-none " +
+            (active ? "text-white" : "bg-white border-slate-300 hover:shadow")
+          }
+          style={{
+            backgroundColor: active ? BRAND : undefined,
+            borderColor: active ? BRAND : undefined,
+            fontWeight: active ? 700 : 500,
+            color: active ? "#fff" : "#111827",
+          }}
         >{children}</button>
       );
 
@@ -79,14 +100,14 @@
         <div className="mb-4 rounded-3xl overflow-hidden shadow-sm border card">
           <div className="px-4 py-3 text-white flex items-center justify-between" style={{backgroundColor:BRAND}}>
             <div className="flex items-center gap-3">
-              <img src="sacadoLogo.png?v=7" alt="SACADO" className="h-8 w-8 rounded-lg bg-white/90 p-1"/>
+              <img src="sacadoLogo.png?v=8" alt="SACADO" className="h-8 w-8 rounded-lg bg-white/90 p-1"/>
               <div>
                 <div className="font-black leading-tight">SACADO académie</div>
                 <div className="text-xs opacity-90">Défi Tables</div>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <img src="dogbot.png?v=7" alt="dogbot" className="h-8 w-8 rounded-full bg-white/90 p-0.5 object-cover"/>
+              <img src="dogbot.png?v=8" alt="dogbot" className="h-8 w-8 rounded-full bg-white/90 p-0.5 object-cover"/>
             </div>
           </div>
         </div>
@@ -239,7 +260,7 @@
                         onChange={e=>setInput(e.target.value.replace(/\D/g,""))}
                         onKeyDown={e=>{ if(e.key==='Enter') handleSubmit(false); }}
                         className="w-40 text-center text-3xl px-4 py-3 rounded-2xl border"
-                        style={{borderColor:BRAND}}
+                        style={{borderColor:BRAND, backgroundColor:dysBlack?'#000':'#fff', color:rootText}}
                         placeholder="Réponse"/>
                       <button onClick={()=>handleSubmit(false)} className="px-5 py-3 rounded-2xl text-white font-semibold shadow" style={{backgroundColor:BRAND}}>
                         Valider
@@ -269,18 +290,19 @@
                       </tbody>
                     </table>
                   </div>
-                  <button onClick={()=>{ setStarted(false); setFinished(false); setAnswers([]); }}
-                    className="px-5 py-3 rounded-2xl border card" style={cardStyle}>Retour aux réglages</button>
+                  <button
+                    onClick={()=>{ setStarted(false); setFinished(false); setAnswers([]); }}
+                    className="px-5 py-3 rounded-2xl border card"
+                    style={{ ...cardStyle, color: rootText }}
+                  >
+                    Retour aux réglages
+                  </button>
                 </div>
               )}
             </div>
           </div>
         );
       }
-
-      // Log simple (au lieu d'overlay)
-      window.addEventListener('error', e => console.log('[window.error]', e.message));
-      window.addEventListener('unhandledrejection', e => console.log('[promise]', e.reason));
 
       ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
     </script>
