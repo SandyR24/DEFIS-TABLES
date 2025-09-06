@@ -1,75 +1,78 @@
-   <!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SACADO - Défi Tables</title>
-    <!-- React + ReactDOM via CDN -->
+    <title>SACADO - Défi Tables (v2)</title>
+
+    <!-- React + ReactDOM en premier -->
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <!-- Babel pour transformer JSX directement dans le navigateur -->
+
+    <!-- Babel (transpile JSX) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Tailwind via CDN -->
+
+    <!-- Tailwind (facultatif) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      body { margin:0; }
-    </style>
+
+    <style>body{margin:0}</style>
   </head>
   <body>
     <div id="root"></div>
 
-    <script type="text/babel">
+    <!-- Marque visible pour vérifier la version -->
+    <div style="position:fixed;bottom:8px;left:8px;background:#8374a7;color:#fff;padding:4px 8px;border-radius:8px;font:12px/1 sans-serif;z-index:9999">
+      DEFIS-TABLES v2
+    </div>
+
+    <!-- Ton app React en JSX => Babel doit avoir les PRESETS -->
+    <script type="text/babel" data-presets="env,react">
       const { useState, useEffect, useMemo, useRef } = React;
       const BRAND = "#8374a7";
       const TABLE_MIN = 2, TABLE_MAX = 10;
 
-      function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
+      const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 
-      function ProgressBar({ value }) {
-        return (
-          <div className="w-full h-3 rounded-full bg-slate-200 overflow-hidden">
-            <div className="h-full transition-all" style={{width: \`\${clamp(value,0,100)}%\`, backgroundColor: BRAND}}/>
-          </div>
-        );
-      }
+      const ProgressBar = ({ value }) => (
+        <div className="w-full h-3 rounded-full bg-slate-200 overflow-hidden">
+          <div className="h-full transition-all" style={{width:`${clamp(value,0,100)}%`,backgroundColor:BRAND}}/>
+        </div>
+      );
 
       const TogglePill = ({ active, children, onClick }) => (
         <button onClick={onClick}
           className={"px-3 py-1 rounded-full border text-sm transition select-none "+
-          (active ? "text-white" : "bg-white border-slate-300 hover:shadow")}
+            (active ? "text-white" : "bg-white border-slate-300 hover:shadow")}
           style={{
             backgroundColor: active ? BRAND : undefined,
             borderColor: active ? BRAND : undefined,
             fontWeight: active ? 700 : 500,
             color: active ? "#fff" : undefined,
-          }}
-        >{children}</button>
+          }}>{children}</button>
       );
 
-      function TopBar(){
-        return (
-          <div className="mb-4 rounded-3xl overflow-hidden shadow-sm border">
-            <div className="px-4 py-3 text-white flex items-center justify-between" style={{backgroundColor:BRAND}}>
-              <div className="flex items-center gap-3">
-                <img src="sacadoLogo.png" alt="SACADO académie" className="h-8 w-8 rounded-lg bg-white/90 p-1"/>
-                <div>
-                  <div className="font-black leading-tight">SACADO académie</div>
-                  <div className="text-xs opacity-90">Jeux d'automatismes — Défi Tables</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="hidden sm:inline text-sm">dogbot</span>
-                <img src="dogbot.png" alt="dogbot" className="h-8 w-8 rounded-full bg-white/90 p-0.5 object-cover"/>
+      const TopBar = () => (
+        <div className="mb-4 rounded-3xl overflow-hidden shadow-sm border">
+          <div className="px-4 py-3 text-white flex items-center justify-between" style={{backgroundColor:BRAND}}>
+            <div className="flex items-center gap-3">
+              <img src="sacadoLogo.png?v=2" alt="SACADO académie" className="h-8 w-8 rounded-lg bg-white/90 p-1"/>
+              <div>
+                <div className="font-black leading-tight">SACADO académie</div>
+                <div className="text-xs opacity-90">Jeux d'automatismes — Défi Tables</div>
               </div>
             </div>
+            <div className="flex items-center gap-3">
+              <span className="hidden sm:inline text-sm">dogbot</span>
+              <img src="dogbot.png?v=2" alt="dogbot" className="h-8 w-8 rounded-full bg-white/90 p-0.5 object-cover"/>
+            </div>
           </div>
-        );
-      }
+        </div>
+      );
 
-      function DefiTablesApp(){
+      function App(){
         const [selectedTables,setSelectedTables]=useState(Array.from({length:TABLE_MAX-TABLE_MIN+1},(_,i)=>TABLE_MIN+i));
         const [questionCount,setQuestionCount]=useState(10);
-        const [timeLimit,setTimeLimit]=useState(5); // null = pas de limite
+        const [timeLimit,setTimeLimit]=useState(5); // null = Pas de limite
         const [started,setStarted]=useState(false);
         const [finished,setFinished]=useState(false);
         const [questions,setQuestions]=useState([]);
@@ -77,8 +80,9 @@
         const [input,setInput]=useState("");
         const [tick,setTick]=useState(0);
         const [answers,setAnswers]=useState([]);
-        const inputRef=useRef(null);
+        const inputRef = useRef(null);
 
+        // timer
         useEffect(()=>{
           if(!started||finished) return;
           const id=setInterval(()=>setTick(t=>t+1),1000);
@@ -93,50 +97,52 @@
         const start=()=>{
           const list=[];
           for(let i=0;i<questionCount;i++){
-            const a=selectedTables[Math.floor(Math.random()*selectedTables.length)];
-            const b=Math.floor(Math.random()*9)+2;
+            const a = selectedTables[Math.floor(Math.random()*selectedTables.length)];
+            const b = Math.floor(Math.random()*9)+2;
             list.push({a,b,product:a*b});
           }
           setQuestions(list);
           setIndex(0); setAnswers([]); setInput(""); setTick(0);
           setStarted(true); setFinished(false);
-          setTimeout(()=>inputRef.current?.focus(),0);
+          setTimeout(()=>{ if (inputRef.current) inputRef.current.focus(); },0);
         };
 
-        const current=questions[index];
-        const progressPct=useMemo(()=>{
+        const current = questions[index];
+        const progressPct = useMemo(()=>{
           if(!started) return 0;
           if(timeLimit==null) return 100;
-          const total=timeLimit, remaining=clamp(total-tick,0,total);
+          const total = timeLimit, remaining = clamp(total - tick, 0, total);
           return (remaining/total)*100;
         },[started,tick,timeLimit]);
 
         const handleSubmit=(timeout=false)=>{
           if(!current) return;
-          const userNum=Number(input);
-          const userProvided=input!=="";
-          const correct=!timeout && userProvided && userNum===current.product;
-          const record={a:current.a,b:current.b,product:current.product,
-                        user:timeout?null:(userProvided?userNum:null),
-                        correct,time:timeLimit!=null?Math.min(tick,timeLimit):tick,
-                        timeout};
+          const userNum = Number(input);
+          const userProvided = input !== "";
+          const correct = !timeout && userProvided && userNum === current.product;
+          const record = { a:current.a, b:current.b, product:current.product,
+            user: timeout ? null : (userProvided ? userNum : null),
+            correct, time: timeLimit!=null ? Math.min(tick,timeLimit) : tick, timeout };
           setAnswers(prev=>[...prev,record]);
+
           if(index+1>=questions.length){ setFinished(true); setStarted(false); }
-          else{ setIndex(i=>i+1); setTick(0); setInput(""); }
+          else { setIndex(i=>i+1); setTick(0); setInput(""); }
         };
 
-        const score=useMemo(()=>answers.filter(a=>a.correct).length,[answers]);
+        const score = useMemo(()=>answers.filter(a=>a.correct).length,[answers]);
 
         return (
           <div className="min-h-screen p-6 bg-slate-50">
             <div className="max-w-4xl mx-auto space-y-6">
               <TopBar/>
+
+              {/* Réglages */}
               {!started && !finished && (
                 <div className="space-y-4">
                   <div className="p-4 rounded-2xl border bg-white">
                     <label className="block text-sm text-slate-600 mb-2">Tables</label>
                     <div className="flex flex-wrap gap-2">
-                      {[2,3,4,5,6,7,8,9,10].map(n=>(
+                      {Array.from({length:9},(_,i)=>i+2).map(n=>(
                         <TogglePill key={n} active={selectedTables.includes(n)}
                           onClick={()=>setSelectedTables(prev=>prev.includes(n)?prev.filter(x=>x!==n):[...prev,n])}>{n}</TogglePill>
                       ))}
@@ -159,9 +165,13 @@
                       <TogglePill active={timeLimit==null} onClick={()=>setTimeLimit(null)}>Pas de limite</TogglePill>
                     </div>
                   </div>
-                  <button onClick={start} className="px-5 py-3 rounded-2xl text-white font-semibold shadow" style={{backgroundColor:BRAND}}>Lancer le défi</button>
+                  <button onClick={start}
+                    className="px-5 py-3 rounded-2xl text-white font-semibold shadow"
+                    style={{backgroundColor:BRAND}}>Lancer le défi</button>
                 </div>
               )}
+
+              {/* Quiz */}
               {started && current && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
@@ -172,15 +182,20 @@
                     <div className="text-slate-500 text-base mb-2">Calcule :</div>
                     <div className="font-black text-5xl md:text-6xl mb-4">{current.a} × {current.b} = ?</div>
                     <div className="flex items-center justify-center gap-3">
-                      <input ref={inputRef} value={input} onChange={e=>setInput(e.target.value.replace(/\\D/g,\"\"))}
+                      <input ref={inputRef} value={input}
+                        onChange={e=>setInput(e.target.value.replace(/\D/g,""))}
                         onKeyDown={e=>{ if(e.key==='Enter') handleSubmit(false); }}
-                        className="w-40 text-center text-3xl px-4 py-3 rounded-2xl border focus:outline-none" style={{borderColor:BRAND}}
-                        placeholder="Réponse"/>
-                      <button onClick={()=>handleSubmit(false)} className="px-5 py-3 rounded-2xl text-white font-semibold shadow" style={{backgroundColor:BRAND}}>Valider</button>
+                        className="w-40 text-center text-3xl px-4 py-3 rounded-2xl border focus:outline-none"
+                        style={{borderColor:BRAND}} placeholder="Réponse"/>
+                      <button onClick={()=>handleSubmit(false)}
+                        className="px-5 py-3 rounded-2xl text-white font-semibold shadow"
+                        style={{backgroundColor:BRAND}}>Valider</button>
                     </div>
                   </div>
                 </div>
               )}
+
+              {/* Récap */}
               {finished && (
                 <div className="space-y-6">
                   <div className="rounded-3xl border bg-white p-6 shadow-sm">
@@ -189,23 +204,30 @@
                   </div>
                   <div className="rounded-3xl border bg-white p-4 shadow-sm overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                      <thead><tr className="text-slate-500">
-                        <th>#</th><th>Énoncé</th><th>Réponse</th><th>Correction</th><th>Statut</th>
-                      </tr></thead>
+                      <thead>
+                        <tr className="text-slate-500">
+                          <th>#</th><th>Énoncé</th><th>Réponse</th><th>Correction</th><th>Statut</th>
+                        </tr>
+                      </thead>
                       <tbody>
                         {answers.map((r,i)=>(
                           <tr key={i} className="border-t">
-                            <td>{i+1}</td>
-                            <td>{r.a}×{r.b}</td>
-                            <td>{r.user ?? "—"}</td>
-                            <td>{r.product}</td>
-                            <td>{r.timeout?"⏱ Hors délai":r.user==null?"— Pas de réponse":r.correct?"✔ Juste":"✘ Faux"}</td>
+                            <td className="py-2 pr-4">{i+1}</td>
+                            <td className="py-2 pr-4">{r.a}×{r.b}</td>
+                            <td className="py-2 pr-4">{r.user ?? "—"}</td>
+                            <td className="py-2 pr-4">{r.product}</td>
+                            <td className="py-2 pr-4">
+                              {r.timeout ? "⏱ Hors délai"
+                                : r.user==null ? "— Pas de réponse"
+                                : r.correct ? "✔ Juste" : "✘ Faux"}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-                  <button onClick={()=>{setStarted(false);setFinished(false);setAnswers([]);}} className="px-5 py-3 rounded-2xl border bg-white">Retour aux réglages</button>
+                  <button onClick={()=>{setStarted(false);setFinished(false);setAnswers([]);}}
+                    className="px-5 py-3 rounded-2xl border bg-white">Retour aux réglages</button>
                 </div>
               )}
             </div>
@@ -213,7 +235,7 @@
         );
       }
 
-      ReactDOM.createRoot(document.getElementById("root")).render(<DefiTablesApp/>);
+      ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
     </script>
   </body>
 </html>
