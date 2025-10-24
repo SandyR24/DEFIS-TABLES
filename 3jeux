@@ -114,7 +114,7 @@ function Hub(){
         </article>
         <article className="card rounded-3xl p-6 shadow-sm">
           <h3 className="text-xl font-extrabold text-[var(--brand)]">Jeu n°2 — Table de Pythagore</h3>
-          <p className="mt-2 text-slate-700">Complète la table (2×2 à 10×10) en mode aléatoire, par table, diagonale des doubles, ou bords 2/5/10.</p>
+          <p className="mt-2 text-slate-700">Complète la table (2×2 à 10×10) en mode aléatoire, par table, diagonale des carrés, ou bords 2/5/10.</p>
           <a href="#/pythagore" className="inline-block mt-4 px-4 py-2 rounded-2xl btn">Découvrir</a>
         </article>
         <article className="card rounded-3xl p-6 shadow-sm">
@@ -433,7 +433,7 @@ function GamePythagore({acc}){
                   </select>
                 </div>
               )}
-              <label className="block"><input type="radio" name="m" checked={mode==="diagonal"} onChange={()=>setMode("diagonal")}/> Diagonale des doubles</label>
+              <label className="block"><input type="radio" name="m" checked={mode==="diagonal"} onChange={()=>setMode("diagonal")}/> Diagonale des carrés</label>
               <label className="block"><input type="radio" name="m" checked={mode==="borders"} onChange={()=>setMode("borders")}/> Bords (2, 5, 10)</label>
             </div>
           </div>
